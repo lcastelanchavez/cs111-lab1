@@ -74,27 +74,82 @@ int main(int argc, char *argv[])
 			printf("child exits with code %d\n", WEXITSTATUS(status)); 
 			if( WEXITSTATUS(status) != 0) 
 			{
-				printf("Child failed!");
-				exit(errno); //??? how to exit with proper code
+				printf("Child failed!\n");
+				return errno; //??? how to exit with proper code
 			}
 			
 		}
 
+		//if in child process 
 		else if(return_code == 0) {
 			//printf("This is child process!\n");
-			execlp(argv[1], argv[1], NULL); 
 
-			//child passes output to buffer pipe
-			//how do we count bytes performed by ls, cat and wc
-			//write(fds[1], "", );
-			perror("execlp");
-			return 1;
-			exit(0); //child exits
+			//if processes exist before this one and not first 
+			if(i != 1)
+			{
+				//make previous process, the next process stdin
+				//essentially make it so we can read from pipe rather than stdin
+				if(dup2(fds_prev[0], STDIN_FILENO) == -1)
+				{
+					fprintf("Error dup2 stdin in child process in %dth argument\n", i);
+					return errno; 
+				}
+				//close fds because resources limited
+				if (close(fds_prev[0]) == -1)
+                {
+                    perror("Error closing fds in child process\n");
+                    return errno;
+                }
+                if (close(fds_prev[1]) == -1)
+                {
+                    perror("Error closing fds in child process\n");
+                    return errno;
+                }
+
+			}
+
+			//if process after this one exist; need to pass output to pipe
+			if (i < argc-1) 
+			{
+				
+				//redirect std output of process to pipe array
+				//make it so output goes to pipe rather than stdout
+                if (dup2(fds_next[1], STDOUT_FILENO) == -1)
+                {
+                    fprintf("Error dup2 stdout in child process in %dth argument\n", i);
+                    return errno;
+                };
+				//close fds 
+				if (close(fds_next[0]) == -1)
+                {
+                    perror("Error in child process\n");
+                    return errno;
+                };
+                if (close(fds_next[1]) == -1)
+                {
+                    perror("Error in child process\n");
+                    return errno;
+                };
+
+			}
+
+
+
+			// check for exec failure
+            if (execlp(argv[i], argv[i], NULL) == -1)
+            {
+                perror("Error running a process (execlp). \n");
+                return errno;
+				exit(0);
+
+            }
+
 		}
 
-
+		//forking failed
 		else {
 			printf("Child process creation error!\n"); 
+			return errno; 
 		}
 	
 	
