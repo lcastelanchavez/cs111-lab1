@@ -49,7 +49,12 @@ int main(int argc, char *argv[])
 			if(i != 1) 
 			{
 				//error checking
-				if(close(fds_prev[0]) || close(fds_prev[1]) == -1 ) 
+				if(close(fds_prev[0]) == -1 ) 
+				{
+					perror("Error in closing parent process: closing files");
+					return errno; 
+				}
+				if (close(fds_prev[1])== -1)
 				{
 					perror("Error in closing parent process: closing files");
 					return errno; 
@@ -71,11 +76,11 @@ int main(int argc, char *argv[])
 			int status = 0;
 			waitpid(pid, &status,0); 
 
-			printf("child exits with code %d\n", WEXITSTATUS(status)); 
+			//printf("child exits with code %d\n", WEXITSTATUS(status)); 
 			if( WEXITSTATUS(status) != 0) 
 			{
-				printf("Child failed!\n");
-				return errno; //??? how to exit with proper code
+				fprintf(stderr, "Child failed!\n");
+				return -1; 
 			}
 			
 		}
@@ -91,7 +96,7 @@ int main(int argc, char *argv[])
 				//essentially make it so we can read from pipe rather than stdin
 				if(dup2(fds_prev[0], STDIN_FILENO) == -1)
 				{
-					fprintf("Error dup2 stdin in child process in %dth argument\n", i);
+					printf("Error dup2 stdin in child process in %d argument\n", i);
 					return errno; 
 				}
 				//close fds because resources limited
@@ -116,7 +121,7 @@ int main(int argc, char *argv[])
 				//make it so output goes to pipe rather than stdout
                 if (dup2(fds_next[1], STDOUT_FILENO) == -1)
                 {
-                    fprintf("Error dup2 stdout in child process in %dth argument\n", i);
+                    printf("Error dup2 stdout in child process in %d argument\n", i);
                     return errno;
                 };
 				//close fds 
@@ -140,7 +145,7 @@ int main(int argc, char *argv[])
             {
                 perror("Error running a process (execlp). \n");
                 return errno;
-				exit(0);
+				//exit(0);
 
             }
 
@@ -148,7 +153,7 @@ int main(int argc, char *argv[])
 
 		//forking failed
 		else {
-			printf("Child process creation error!\n"); 
+			fprintf(stderr, "Child process creation error!\n"); 
 			return errno; 
 		}
 	
@@ -157,6 +162,6 @@ int main(int argc, char *argv[])
 	}
 	
 
-	printf("Finished!\n"); 
+	//printf("Finished!\n"); 
 	return 0;
 }
