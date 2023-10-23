@@ -1,17 +1,47 @@
-## UID: 123456789
+## UID: 105396892
 
 ## Pipe Up
 
-One sentence description
+C code implementation for pipe operator
 
 ## Building
 
-Explain briefly how to build your program
+To build binary:
+>make
+
 
 ## Running
+Example:
+```
+    > ./pipe ls
+    Makefile  pipe  pipe.c  pipe.o  README.md  test_lab1.py
 
-Show an example run of your program, using at least two additional arguments, and what to expect
+    > ./pipe ls cat
+    Makefile
+    pipe
+    pipe.c
+    pipe.o
+    README.md
+    test_lab1.py
+
+# Output of command above is equivalent to the following:
+    > ls | cat
+    Makefile
+    pipe
+    pipe.c
+    pipe.o
+    README.md
+    test_lab1.py
+
+    > ./pipe ls cat wc
+      6       6      51
+# Output of command above is equivalent to the following:
+    > ls | cat | wc
+      6       6      51
+```
+
+
 
 ## Cleaning up
 
-Explain briefly how to clean up all binary files
+>make clean
